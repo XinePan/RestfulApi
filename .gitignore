@@ -105,3 +105,28 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+.gitignore
+.idea/inspectionProfiles/
+.idea/workspace.xml
+venv/Include/
+venv/Lib/site-packages/certifi/__pycache__/
+venv/Lib/site-packages/chardet/__pycache__/
+venv/Lib/site-packages/chardet/cli/__pycache__/
+venv/Lib/site-packages/idna/__pycache__/
+venv/Lib/site-packages/pip-10.0.1-py3.7.egg/
+venv/Lib/site-packages/requests/__pycache__/
+venv/Lib/site-packages/setuptools-39.1.0-py3.7.egg
+venv/Lib/site-packages/urllib3/__pycache__/
+venv/Lib/site-packages/urllib3/contrib/__pycache__/
+venv/Lib/site-packages/urllib3/contrib/_securetransport/__pycache__/
+venv/Lib/site-packages/urllib3/packages/__pycache__/
+venv/Lib/site-packages/urllib3/packages/backports/__pycache__/
+venv/Lib/site-packages/urllib3/packages/ssl_match_hostname/__pycache__/
+venv/Lib/site-packages/urllib3/util/__pycache__/
+venv/Scripts/easy_install-3.7.exe.manifest
+venv/Scripts/easy_install.exe.manifest
+venv/Scripts/libcrypto-1_1.dll
+venv/Scripts/libssl-1_1.dll
+venv/Scripts/pip.exe.manifest
+venv/Scripts/pip3.7.exe.manifest
+venv/Scripts/pip3.exe.manifest
