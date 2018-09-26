@@ -3,14 +3,17 @@ import json
 
 class Tokendler(object):
     def __init__(self):
-        headers = {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                   'Accept-Encoding': 'gzip, deflate, compress',
-                   'Accept-Language': 'en-us;q=0.5,en;q=0.3',
-                   'Cache-Control': 'max-age=0',
-                   'Connection': 'keep-alive',
-                   'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100101 Firefox/22.0'}
-        self.__session = requests.session()
-        self.__session.headers.update(headers)
+        self.__init_headers()
+        requests.packages.urllib3.disable_warnings()
+
+    def __init_headers(self):
+        headers = {'Accept':'application/json',
+                        'Content-Type':'application/json',
+                        'User-Agent':'Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.1.6) Gecko/20091201 Firefox/3.5.6'}
+        self.session = requests.session()
+        self.session.headers.clear()
+        self.session.headers.update(headers)
+        self.session.verify = False
 
     def get_token(self,url,payload):
         js = json.dumps(payload)
