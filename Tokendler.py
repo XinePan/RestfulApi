@@ -16,13 +16,20 @@ class Tokendler(object):
         self.session.verify = False
 
     def get_token(self,url,payload):
-        js = json.dumps(payload)
-        self.__session.post(url,json=js).json()
+        r = self.session.post(url, data=json.dumps(payload)).json()
+        self.get_parmar(r,'token')
 
-
+    def get_parmar(self, data, key):
+        print(data.keys())
 
 
 
 if __name__=="__main__":
+    url = 'https://172.31.1.206:18002/controller/v2/tokens'
+    payload = {
+  "userName":"vxlan2@huawei.com",
+  "password":"Huawei@123"
+}
+
     t = Tokendler()
-    t.get_token()
+    t.get_token(url, payload)
