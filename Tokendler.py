@@ -1,4 +1,5 @@
 #_*_ coding:utf-8 _*_
+from __future__ import print_function
 import requests
 import json
 
@@ -6,7 +7,7 @@ class Tokendler(object):
     def __init__(self):
         self.__init_headers()
         requests.packages.urllib3.disable_warnings()
-        self.__cookie = {}
+        self.__storage = {}
 
     def __init_headers(self):
         headers = {'Accept':'application/json',
@@ -19,66 +20,126 @@ class Tokendler(object):
 
     def get_token(self,url,payload):
         r = self.session.post(url, data=json.dumps(payload)).json()
-        k,v = self.fuzzyfinder_dict('token', r)
-        self.session.headers.update({'X-ACCESS-TOKEN':v})
+        result = self.fuzzyfinder_dict('token', r)
+        print('the token is ', result[0][-1])
+        self.session.headers.update({'X-ACCESS-TOKEN':result[0][-1]})
+        return  r
 
-    def set_parmar(self, key, value):
-        self.__cookie[key] = value
+    def set_parmar(self, indict):
+        self.__storage.update(indict)
 
     def del_parmar(self, key):
         try:
-            k, v = self.fuzzyfinder_dict(key, self.__cookie)
+            result = self.fuzzyfinder_dict(key, self.__storage)
+
             if k != None:
-                self.__cookie.pop(k)
+                self.__storage.pop(k)
             else:
-                self.__cookie.pop(key)
+                self.__storage.pop(key)
         except Exception as err:
             print("Cannot delete %s"%key)
 
     def get_parmar(self,key):
         try:
-            k,v = self.fuzzyfinder_dict(key, self.__cookie)
+            k,v = self.fuzzyfinder_dict(key, self.__storage)
             if k != None:
-                return self.__cookie[k]
+                return self.__storage[k]
             else:
-                return self.__cookie[k]
+                return self.__storage[k]
         except  Exception as err:
             return None
 
-    def fuzzyfinder_dict(self, key, value):
-        lists = [value]
-        while lists != []:
-            for li in lists:
-                if isinstance(li,dict):
-                    r = self.fuzzyfinder_list(key, list(li.keys()))
-                    if len(r) > 0:
-                        return r[0], li[r[0]]
-                    lists += [v for k,v in li.items()]
-                lists.remove(li)
-        return None,None
-
-    def fuzzyfinder_list(self,user_input, collection):
+    def fuzzyfinder_dict(self, user_input, collection, topN=1):
         import re
         suggestions = []
         pattern = '.*?'.join(user_input)  # Converts 'djm' to 'd.*?j.*?m'
         regex = re.compile(pattern)  # Compiles a regex.
-        for item in collection:
-            match = regex.search(item)  # Checks if the current item matches the regex.
+        for item in self.dict_generator(collection):
+            match = regex.search('.'.join(item[0:-1]))  # Checks if the current item matches the regex.
             if match:
-                suggestions.append((len(match.group()), match.start(), item))
-        return [x for _, _, x in sorted(suggestions)]
+                suggestions.append((len(match.group()), match.start(), ['.'.join(item[0:-1]), item[-1]]))
+        return [x for _, _, x in sorted(suggestions)][0:topN]
+
+    def dict_generator(self,indict, pre=None):
+        pre = pre[:] if pre else []
+        if isinstance(indict, dict):
+            for key, value in indict.items():
+                if isinstance(value, dict):
+                    if len(value) == 0:
+                        yield pre + [key, '{}']
+                    else:
+                        for d in self.dict_generator(value, pre + [key]):
+                            yield d
+                elif isinstance(value, list):
+                    if len(value) == 0:
+                        yield pre + [key, '[]']
+                    else:
+                        for v in value:
+                            for d in self.dict_generator(v, pre + [key]):
+                                yield d
+                elif isinstance(value, tuple):
+                    if len(value) == 0:
+                        yield pre + [key, '()']
+                    else:
+                        for v in value:
+                            for d in self.dict_generator(v, pre + [key]):
+                                yield d
+                else:
+                    yield pre + [key, value]
+        else:
+            yield indict
 
 
 
 
 
 if __name__=="__main__":
-    url = 'https://172.31.1.206:18002/controller/v2/tokens'
+    url = 'https://10.173.12.36:18002/controller/v2/tokens'
     payload = {
-  "userName":"vxlan2@huawei.com",
+  "userName":"api@huawei.com",
   "password":"Huawei@123"
 }
 
     t = Tokendler()
     t.get_token(url, payload)
+    siteId = []
+    for jtem in range(7,9):
+        url = 'https://10.173.12.36:18002/controller/campus/v3/sites'
+        payload = {
+                    "sites":[
+                        {
+                            "name":"ppsk%d"%(jtem+8),
+                            "description":"site12",
+                            "type":[
+                                "AP"
+                            ]
+                        }
+                    ]
+                }
+        r = t.session.post(url, data=json.dumps(payload)).json()
+        print(r)
+        v = t.fuzzyfinder_dict('id',r)
+        siteId.append(v)
+        print(v)
+        '''
+        url = 'https://10.173.12.36:18002/controller/campus/v3/devices'
+        for item in range(0,1000):
+            payload = {
+                        "devices":[
+                                    {
+                                        "esn":"AA50082935AAAAA%05d"%(item+jtem*1000+6000),
+                                        "name":"ap-%d"%(item+jtem*1000+6000),
+                                        "siteId":v,
+                                        "description": "",
+                                        "tags":["12312啊ad_fs-dfd-sfd_","123"]
+                                    },
+                                    ]
+                        }
+            r = t.session.post(url, data=json.dumps(payload)).json()
+            '''
+
+
+    url = 'https://10.173.12.36:18002/controller/campus/v1/authconfigservice/accessconfig/1b3c75c2-8827-4fde-baba-83d38b2bfae8/ppsk'
+    r = t.session.post(url).json()
+    print(r)
 
